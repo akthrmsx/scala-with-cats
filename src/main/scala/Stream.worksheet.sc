@@ -48,12 +48,13 @@ trait Stream[A]:
         self.tail.scanLeft(f(zero, self.head))(f)
 
 object Stream:
-  val ones: Stream[Int] = new Stream[Int]:
-    def head: Int =
-      1
+  val ones: Stream[Int] =
+    new Stream[Int]:
+      def head: Int =
+        1
 
-    def tail: Stream[Int] =
-      ones
+      def tail: Stream[Int] =
+        ones
 
   def unfold[A, B](seed: A, f: A => B, next: A => A): Stream[B] =
     new Stream[B]:
