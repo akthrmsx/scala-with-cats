@@ -1,3 +1,5 @@
+import scala.util.Random
+
 trait Stream[A]:
   def head: A
   def tail: Stream[A]
@@ -56,6 +58,14 @@ object Stream:
       def tail: Stream[Int] =
         ones
 
+  def always[A](elem: => A): Stream[A] =
+    new Stream[A]:
+      lazy val head: A =
+        elem
+
+      lazy val tail: Stream[A] =
+        always(head)
+
   def unfold[A, B](seed: A, f: A => B, next: A => A): Stream[B] =
     new Stream[B]:
       def head: B =
@@ -63,6 +73,14 @@ object Stream:
 
       def tail: Stream[B] =
         unfold(next(seed), f, next)
+
+  def unfoldByNeed[A, B](seed: A, f: A => B, next: A => A): Stream[B] =
+    new Stream[B]:
+      lazy val head: B =
+        f(seed)
+
+      lazy val tail: Stream[B] =
+        unfoldByNeed(next(seed), f, next)
 
 Stream.ones.head
 Stream.ones.tail.head
@@ -74,3 +92,22 @@ alternating.take(5)
 
 val naturals = Stream.ones.scanLeft(0)((b, a) => b + a)
 naturals.take(5)
+
+val twos = Stream.always(2)
+twos.take(5)
+
+val randoms: Stream[Double] = Stream.unfold(Random, r => r.nextDouble(), identity)
+randoms.take(5)
+
+val randomsByNeed: Stream[Double] =
+  new Stream[Double]:
+    lazy val head: Double =
+      Random.nextDouble()
+
+    lazy val tail: Stream[Double] =
+      randomsByNeed
+randomsByNeed.take(5)
+
+val randomsByNeed2 = Stream.unfoldByNeed(Random, r => r.nextDouble(), identity)
+randomsByNeed2.take(5)
+randomsByNeed2.take(5)
