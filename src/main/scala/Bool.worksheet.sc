@@ -27,6 +27,11 @@ object Bool:
       def `if`[A](t: A)(f: A): A =
         b.`if`(False)(True).`if`(t)(f)
 
+Bool.and(Bool.True, Bool.True).`if`("YES")("NO")
+Bool.and(Bool.True, Bool.False).`if`("YES")("NO")
+Bool.and(Bool.False, Bool.True).`if`("YES")("NO")
+Bool.and(Bool.False, Bool.False).`if`("YES")("NO")
+
 Bool.or(Bool.True, Bool.True).`if`("YES")("NO")
 Bool.or(Bool.True, Bool.False).`if`("YES")("NO")
 Bool.or(Bool.False, Bool.True).`if`("YES")("NO")
