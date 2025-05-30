@@ -1,3 +1,5 @@
+type Continuation = Double => Double
+
 enum Expression:
   case Lit(value: Double)
   case Add(left: Expression, right: Expression)
@@ -11,12 +13,15 @@ enum Expression:
   def /(that: Expression): Expression = Div(this, that)
 
   def eval: Double =
-    this match
-      case Lit(value)       => value
-      case Add(left, right) => left.eval + right.eval
-      case Sub(left, right) => left.eval - right.eval
-      case Mul(left, right) => left.eval * right.eval
-      case Div(left, right) => left.eval / right.eval
+    def loop(expr: Expression, cont: Continuation): Double =
+      expr match
+        case Lit(value)       => cont(value)
+        case Add(left, right) => loop(left, l => loop(right, r => cont(l + r)))
+        case Sub(left, right) => loop(left, l => loop(right, r => cont(l - r)))
+        case Mul(left, right) => loop(left, l => loop(right, r => cont(l * r)))
+        case Div(left, right) => loop(left, l => loop(right, r => cont(l / r)))
+
+    loop(this, identity)
 
 object Expression:
   def apply(value: Double): Expression = Lit(value)
