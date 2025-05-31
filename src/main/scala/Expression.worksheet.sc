@@ -1,4 +1,11 @@
-type Continuation = Double => Double
+import scala.annotation.tailrec
+
+type Continuation = Double => Call
+
+enum Call:
+  case Continue(value: Double, k: Continuation)
+  case Loop(expr: Expression, k: Continuation)
+  case Done(result: Double)
 
 enum Expression:
   case Lit(value: Double)
@@ -13,15 +20,22 @@ enum Expression:
   def /(that: Expression): Expression = Div(this, that)
 
   def eval: Double =
-    def loop(expr: Expression, cont: Continuation): Double =
+    def loop(expr: Expression, cont: Continuation): Call =
       expr match
-        case Lit(value)       => cont(value)
-        case Add(left, right) => loop(left, l => loop(right, r => cont(l + r)))
-        case Sub(left, right) => loop(left, l => loop(right, r => cont(l - r)))
-        case Mul(left, right) => loop(left, l => loop(right, r => cont(l * r)))
-        case Div(left, right) => loop(left, l => loop(right, r => cont(l / r)))
+        case Lit(value)       => Call.Continue(value, cont)
+        case Add(left, right) => Call.Loop(left, l => Call.Loop(right, r => Call.Continue(l + r, cont)))
+        case Sub(left, right) => Call.Loop(left, l => Call.Loop(right, r => Call.Continue(l - r, cont)))
+        case Mul(left, right) => Call.Loop(left, l => Call.Loop(right, r => Call.Continue(l * r, cont)))
+        case Div(left, right) => Call.Loop(left, l => Call.Loop(right, r => Call.Continue(l / r, cont)))
 
-    loop(this, identity)
+    @tailrec
+    def trampoline(call: Call): Double =
+      call match
+        case Call.Continue(value, k) => trampoline(k(value))
+        case Call.Loop(expr, k)      => trampoline(loop(expr, k))
+        case Call.Done(result)       => result
+
+    trampoline(loop(this, Call.Done(_)))
 
 object Expression:
   def apply(value: Double): Expression = Lit(value)
