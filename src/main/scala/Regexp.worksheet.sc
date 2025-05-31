@@ -1,3 +1,5 @@
+import scala.annotation.tailrec
+
 type Continuation = Option[Int] => Call
 
 enum Call:
@@ -41,6 +43,7 @@ enum Regexp:
         case Apply(string) => Call.Continue(Option.when(input.startsWith(string, idx))(idx + string.size), cont)
         case Empty         => Call.Continue(None, cont)
 
+    @tailrec
     def trampoline(call: Call): Option[Int] =
       call match
         case Call.Continue(idx, k)     => trampoline(k(idx))
